@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Call } from "@/entities/Call";
+import { Call } from "@/api/entities";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Search, Filter, AlertTriangle, CheckCircle, Clock, User, Play } from "lucide-react";

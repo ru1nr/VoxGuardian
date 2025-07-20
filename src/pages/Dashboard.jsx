@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Call } from "@/entities/Call";
+import { Call } from "@/api/entities";
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadFile } from "@/integrations/Core";
+import { UploadFile } from "@/api/integrations";
 import { Upload, Play, AlertTriangle, CheckCircle, Clock, User, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
