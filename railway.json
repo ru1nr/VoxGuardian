@@ -1,18 +1,11 @@
 {
-  "build": {
-    "builder": "NIXPACKS",
-    "nixpacksConfig": {
-      "providers": ["python"],
-      "phases": {
-        "setup": {
-          "commands": [
-            "pip install -r backend/requirements.txt"
-          ]
-        },
-        "start": {
-          "cmd": "python backend/app.py"
-        }
-      }
+  "services": {
+    "backend": {
+      "source": "backend",
+      "dockerfile": "Dockerfile"
+    },
+    "frontend": {
+      "source": "frontend"
     }
   }
 }
