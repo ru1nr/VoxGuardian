@@ -7,13 +7,14 @@ from werkzeug.utils import secure_filename
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2 import Error as Psycopg2Error
 
 # Upload folder setup
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "audio")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # File upload security configuration
-ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a', 'ogg', 'flac'}
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a'}  # Focus on commonly supported formats
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB
 # Focus on commonly supported audio formats for transcription
 ALLOWED_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4']
@@ -21,12 +22,12 @@ ALLOWED_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4']
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Replace with your actual RDS credentials
-DB_HOST = "database-1.cf8e84ksosls.us-east-2.rds.amazonaws.com"
-DB_PORT = "5432"
-DB_NAME = "voxguardian"
-DB_USER = "postgres"
-DB_PASS = "owe5Pry?bog"  # Replace with your RDS master password
+# Database configuration - use environment variables in production
+DB_HOST = os.environ.get("DB_HOST", "database-1.cf8e84ksosls.us-east-2.rds.amazonaws.com")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "voxguardian")
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASS = os.environ.get("DB_PASS", "owe5Pry?bog")  # Replace with your RDS master password
 
 app = Flask(__name__)
 CORS(app)
@@ -58,7 +59,7 @@ def analyze():
     # Validate file extension
     if not allowed_file(audio_file.filename):
         print(f"❌ Invalid file type: {audio_file.filename}")
-        return jsonify({"error": "Unsupported file type. Please upload MP3, WAV, M4A, OGG, or FLAC files"}), 400
+        return jsonify({"error": "Unsupported file type. Please upload MP3, WAV, or M4A files"}), 400
 
     # Validate MIME type for additional security
     if audio_file.content_type not in ALLOWED_MIME_TYPES:
@@ -118,7 +119,7 @@ def analyze():
             cur.close()
             conn.close()
             print("✅ DB insert success")
-        except psycopg2.Error as db_error:
+        except Psycopg2Error as db_error:
             print(f"❌ Database error: {db_error}")
             return jsonify({"error": "Database operation failed"}), 500
         except Exception as db_error:
@@ -181,4 +182,6 @@ def serve_audio(filename):
     return app.send_static_file(f"audio/{secure_filename(filename)}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    # Railway sets PORT environment variable
+    app.run(debug=False, host="0.0.0.0", port=port)
