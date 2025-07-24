@@ -27,4 +27,4 @@ RUN mkdir -p static/audio
 EXPOSE $PORT
 
 # Start the application
-CMD ["python", "app.py"]
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:$PORT"]
