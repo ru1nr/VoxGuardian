@@ -26,5 +26,5 @@ RUN mkdir -p static/audio
 # Expose port
 EXPOSE 8080
 
-# Use hardcoded port 8080 for Railway
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--preload", "--timeout", "300", "app:app"]
+# Use Flask dev server instead of Gunicorn for Whisper stability
+CMD ["python", "app.py"]
