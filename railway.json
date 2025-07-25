@@ -1,8 +1,7 @@
 {
   "services": {
     "backend": {
-      "source": "backend",
-      "dockerfile": "Dockerfile"
+      "source": "backend"
     },
     "frontend": {
       "source": "frontend"

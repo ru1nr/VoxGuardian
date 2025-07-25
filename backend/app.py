@@ -5,9 +5,25 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import Error as Psycopg2Error
+
+# Database configuration - now reads from .env file
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASS = os.environ.get("DB_PASS")
+
+# Debug: Print to verify variables are loaded (remove in production)
+print(f"DB_HOST loaded: {DB_HOST is not None}")
+print(f"DB_NAME loaded: {DB_NAME is not None}")
+# Don't print actual values for security
 
 # Upload folder setup
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "audio")
@@ -21,13 +37,6 @@ ALLOWED_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4']
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Database configuration - use environment variables in production
-DB_HOST = os.environ.get("DB_HOST", "database-1.cf8e84ksosls.us-east-2.rds.amazonaws.com")
-DB_PORT = os.environ.get("DB_PORT", "5432")
-DB_NAME = os.environ.get("DB_NAME", "voxguardian")
-DB_USER = os.environ.get("DB_USER", "postgres")
-DB_PASS = os.environ.get("DB_PASS", "owe5Pry?bog")  # Replace with your RDS master password
 
 app = Flask(__name__)
 CORS(app)

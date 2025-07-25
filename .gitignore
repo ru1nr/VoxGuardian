@@ -1,5 +1,44 @@
+# Environment variables
+.env
+backend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -23,4 +62,9 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
+# Database configuration
+DB_HOST=database-1.cf8e84ksosls.us-east-2.rds.amazonaws.com
+DB_PORT=5432
+DB_NAME=voxguardian
+DB_USER=postgres
+DB_PASS=owe5Pry?bog
