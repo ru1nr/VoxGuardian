@@ -4,6 +4,8 @@ import os
 import subprocess
 import wave
 import contextlib
+import torch
+import ffmpeg
 
 model = whisper.load_model("base")
 
