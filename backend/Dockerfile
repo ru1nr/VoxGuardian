@@ -24,7 +24,7 @@ COPY . .
 RUN mkdir -p static/audio
 
 # Expose port
-EXPOSE $PORT
+EXPOSE 8080
 
-# Use shell form to expand $PORT environment variable
-CMD sh -c "gunicorn --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300 app:app"
+# Use hardcoded port 8080 for Railway
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--preload", "--timeout", "300", "app:app"]
