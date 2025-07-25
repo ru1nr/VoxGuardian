@@ -26,5 +26,5 @@ RUN mkdir -p static/audio
 # Expose port
 EXPOSE $PORT
 
-# Use Gunicorn instead of Flask dev server
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--preload", "--timeout", "300", "app:app"]
+# Use Gunicorn with dynamic port binding
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300 app:app
