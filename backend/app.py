@@ -276,7 +276,3 @@ def get_recent_calls():
 @app.route("/audio/<filename>")
 def serve_audio(filename):
     return app.send_static_file(f"audio/{secure_filename(filename)}")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
