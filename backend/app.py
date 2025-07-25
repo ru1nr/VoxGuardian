@@ -5,6 +5,7 @@ import uuid
 from werkzeug.utils import secure_filename
 import logging
 from datetime import datetime
+import threading
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -14,14 +15,18 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import Error as Psycopg2Error
 
-# Database configuration - now reads from .env file
+# Global flags for startup status
+stt_loading = True
+stt_ready = False
+transcribe_audio = None
+
+# Database configuration
 DB_HOST = os.environ.get("DB_HOST")
 DB_PORT = os.environ.get("DB_PORT", "5432")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 
-# Validate required environment variables
 if not all([DB_HOST, DB_NAME, DB_USER, DB_PASS]):
     raise ValueError("Missing required database environment variables. Check your .env file.")
 
@@ -40,18 +45,27 @@ ALLOWED_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4']
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Load STT processor at startup (for Gunicorn preloading)
-print("🧠 Loading STT processor...")
-try:
-    from stt_processor import transcribe_audio
-    stt_ready = True
-    print("✅ STT processor loaded successfully")
-except Exception as e:
-    print(f"❌ STT processor failed to load: {e}")
-    stt_ready = False
-    # Create stub function
-    def transcribe_audio(audio_file):
-        return "STT processor not available", 0.5
+# Load STT processor in background thread
+def load_stt_processor():
+    global stt_loading, stt_ready, transcribe_audio
+    print("🧠 Loading STT processor...")
+    try:
+        from stt_processor import transcribe_audio as ta
+        transcribe_audio = ta
+        stt_ready = True
+        stt_loading = False
+        print("✅ STT processor loaded successfully")
+    except Exception as e:
+        print(f"❌ STT processor failed to load: {e}")
+        stt_loading = False
+        stt_ready = False
+        # Create stub function
+        def stub_transcribe(audio_file):
+            return "STT processor not available", 0.5
+        transcribe_audio = stub_transcribe
+
+# Start STT loading in background thread so Flask can start immediately
+threading.Thread(target=load_stt_processor, daemon=True).start()
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", "http://localhost:5173"])
@@ -70,19 +84,33 @@ def request_entity_too_large(error):
 
 @app.route("/", methods=["GET"])
 def root():
-    return jsonify({"message": "VoxGuardian API is running!", "status": "ok"})
+    return jsonify({
+        "message": "VoxGuardian API is running!", 
+        "status": "ok",
+        "stt_ready": stt_ready,
+        "stt_loading": stt_loading
+    })
 
 @app.route("/health", methods=["GET"])
 def health_check():
+    # Always respond quickly to health checks
     return jsonify({
         "status": "healthy", 
         "timestamp": datetime.utcnow().isoformat(),
         "database": "connected" if DB_HOST else "not configured",
-        "stt_ready": stt_ready
+        "stt_ready": stt_ready,
+        "stt_loading": stt_loading
     })
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    # Check if STT is ready
+    if not stt_ready:
+        if stt_loading:
+            return jsonify({"error": "STT processor is still loading. Please try again in a moment."}), 503
+        else:
+            return jsonify({"error": "STT processor failed to load."}), 500
+
     logger.info("🔍 /analyze route hit")
 
     # Check if file part exists in request
