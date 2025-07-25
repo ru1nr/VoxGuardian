@@ -14,9 +14,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import Error as Psycopg2Error
 
-# Global flag to track if STT is ready
-stt_ready = False
-
 # Database configuration - now reads from .env file
 DB_HOST = os.environ.get("DB_HOST")
 DB_PORT = os.environ.get("DB_PORT", "5432")
@@ -28,26 +25,36 @@ DB_PASS = os.environ.get("DB_PASS")
 if not all([DB_HOST, DB_NAME, DB_USER, DB_PASS]):
     raise ValueError("Missing required database environment variables. Check your .env file.")
 
-# Debug: Print to verify variables are loaded (remove in production)
 print(f"DB_HOST loaded: {DB_HOST is not None}")
 print(f"DB_NAME loaded: {DB_NAME is not None}")
-# Don't print actual values for security
 
 # Upload folder setup
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "audio")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # File upload security configuration
-ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a'}  # Focus on commonly supported formats
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4a'}
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB
-# Focus on commonly supported audio formats for transcription
 ALLOWED_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4']
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Load STT processor at startup (for Gunicorn preloading)
+print("🧠 Loading STT processor...")
+try:
+    from stt_processor import transcribe_audio
+    stt_ready = True
+    print("✅ STT processor loaded successfully")
+except Exception as e:
+    print(f"❌ STT processor failed to load: {e}")
+    stt_ready = False
+    # Create stub function
+    def transcribe_audio(audio_file):
+        return "STT processor not available", 0.5
+
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000", "http://localhost:5173"])  # Add your frontend URLs
+CORS(app, origins=["http://localhost:3000", "http://localhost:5173"])
 
 # Configure upload limits
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
@@ -57,32 +64,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Lazy load STT processor
-def get_transcribe_function():
-    global stt_ready
-    if not stt_ready:
-        try:
-            from stt_processor import transcribe_audio
-            stt_ready = True
-            logger.info("✅ STT processor loaded successfully")
-            return transcribe_audio
-        except Exception as e:
-            logger.error(f"❌ STT processor failed to load: {e}")
-            # Return a stub function
-            def stub_transcribe(audio_file):
-                return "STT processor not available", 0.5
-            return stub_transcribe
-    else:
-        from stt_processor import transcribe_audio
-        return transcribe_audio
-
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'error': 'File too large (max 10MB)'}), 413
 
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"message": "VoxGuardian API is running!", "status": "ok"})
+
 @app.route("/health", methods=["GET"])
 def health_check():
-    # Always respond to health checks, even if STT isn't ready
     return jsonify({
         "status": "healthy", 
         "timestamp": datetime.utcnow().isoformat(),
@@ -144,9 +135,7 @@ def analyze():
     try:
         logger.info("🧠 Running transcription...")
         
-        # Get transcription function (loads STT if needed)
-        transcribe_audio = get_transcribe_function()
-        
+        # Use the preloaded transcribe_audio function directly
         with open(filepath, "rb") as f:
             transcript, confidence = transcribe_audio(f)
 
