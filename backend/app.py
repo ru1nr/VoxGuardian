@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from stt_processor import transcribe_audio
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -14,6 +13,9 @@ load_dotenv()
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import Error as Psycopg2Error
+
+# Global flag to track if STT is ready
+stt_ready = False
 
 # Database configuration - now reads from .env file
 DB_HOST = os.environ.get("DB_HOST")
@@ -55,9 +57,38 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Lazy load STT processor
+def get_transcribe_function():
+    global stt_ready
+    if not stt_ready:
+        try:
+            from stt_processor import transcribe_audio
+            stt_ready = True
+            logger.info("✅ STT processor loaded successfully")
+            return transcribe_audio
+        except Exception as e:
+            logger.error(f"❌ STT processor failed to load: {e}")
+            # Return a stub function
+            def stub_transcribe(audio_file):
+                return "STT processor not available", 0.5
+            return stub_transcribe
+    else:
+        from stt_processor import transcribe_audio
+        return transcribe_audio
+
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'error': 'File too large (max 10MB)'}), 413
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    # Always respond to health checks, even if STT isn't ready
+    return jsonify({
+        "status": "healthy", 
+        "timestamp": datetime.utcnow().isoformat(),
+        "database": "connected" if DB_HOST else "not configured",
+        "stt_ready": stt_ready
+    })
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -112,6 +143,10 @@ def analyze():
 
     try:
         logger.info("🧠 Running transcription...")
+        
+        # Get transcription function (loads STT if needed)
+        transcribe_audio = get_transcribe_function()
+        
         with open(filepath, "rb") as f:
             transcript, confidence = transcribe_audio(f)
 
@@ -252,14 +287,6 @@ def get_recent_calls():
 @app.route("/audio/<filename>")
 def serve_audio(filename):
     return app.send_static_file(f"audio/{secure_filename(filename)}")
-
-@app.route("/health", methods=["GET"])
-def health_check():
-    return jsonify({
-        "status": "healthy", 
-        "timestamp": datetime.utcnow().isoformat(),
-        "database": "connected" if DB_HOST else "not configured"
-    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
