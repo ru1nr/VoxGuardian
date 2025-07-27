@@ -68,7 +68,7 @@ def load_stt_processor():
 threading.Thread(target=load_stt_processor, daemon=True).start()
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000", "http://localhost:5173"])
+CORS(app)  # Allow all origins
 
 # Configure upload limits
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
