@@ -1,13 +1,22 @@
 {
+<<<<<<< HEAD
   "name": "base44-app",
+=======
+  "name": "voxguardian-app",
+>>>>>>> master
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+<<<<<<< HEAD
     "lint": "eslint .",
     "preview": "vite preview"
+=======
+    "preview": "vite preview",
+    "vercel-build": "npm run build"
+>>>>>>> master
   },
   "dependencies": {
     "@base44/sdk": "^0.1.2",

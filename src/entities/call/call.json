@@ -1,0 +1,52 @@
+{
+  "name": "Call",
+  "type": "object",
+  "properties": {
+    "transcript": {
+      "type": "string",
+      "description": "The transcribed text from the audio call"
+    },
+    "confidence_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "AI confidence score between 0 and 1"
+    },
+    "dominant_emotion": {
+      "type": "string",
+      "enum": [
+        "fear",
+        "anger",
+        "sadness",
+        "joy",
+        "surprise",
+        "disgust",
+        "neutral"
+      ],
+      "description": "Primary emotion detected in the call"
+    },
+    "speaker_id": {
+      "type": "string",
+      "description": "Unique identifier for the speaker"
+    },
+    "is_suspicious": {
+      "type": "boolean",
+      "description": "Flag indicating if the call is flagged as suspicious"
+    },
+    "audio_file_url": {
+      "type": "string",
+      "description": "URL to the uploaded audio file"
+    },
+    "analysis_duration": {
+      "type": "number",
+      "description": "Time taken to analyze the call in seconds"
+    }
+  },
+  "required": [
+    "transcript",
+    "confidence_score",
+    "dominant_emotion",
+    "speaker_id",
+    "is_suspicious"
+  ]
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Environment variables
 .env
 backend/.env
@@ -68,3 +69,6 @@ DB_PORT=5432
 DB_NAME=voxguardian
 DB_USER=postgres
 DB_PASS=owe5Pry?bog
+=======
+node_modules
+>>>>>>> master
