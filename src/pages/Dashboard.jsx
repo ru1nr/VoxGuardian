@@ -25,7 +25,8 @@ export default function Dashboard() {
 
   const loadRecentCalls = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/recent-calls");
+      // Change from localhost to environment variable
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/recent-calls`);
       setRecentCalls(response.data.slice(0, 10)); // Latest 10 calls
     } catch (err) {
       console.error("Error loading recent calls:", err);
@@ -50,7 +51,8 @@ export default function Dashboard() {
         setProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await axios.post("http://localhost:5000/analyze", formData, {
+      // Change from localhost to environment variable
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/analyze`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
