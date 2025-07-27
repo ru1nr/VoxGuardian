@@ -25,12 +25,11 @@ export default function Dashboard() {
 
   const loadRecentCalls = async () => {
     try {
-      // Change from localhost to environment variable
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/recent-calls`);
-      setRecentCalls(response.data.slice(0, 10)); // Latest 10 calls
+      setRecentCalls(response.data.slice(0, 10));
     } catch (err) {
       console.error("Error loading recent calls:", err);
-      setRecentCalls([]); // Fallback to empty array
+      setRecentCalls([]);
     }
   };
 
@@ -57,7 +56,7 @@ export default function Dashboard() {
           "Content-Type": "multipart/form-data",
         },
       });
-
+      
       clearInterval(progressInterval);
       setProgress(100);
 
