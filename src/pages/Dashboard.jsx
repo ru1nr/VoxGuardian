@@ -10,7 +10,8 @@ import AudioUploader from "../components/dashboard/AudioUploader";
 import AnalysisResults from "../components/dashboard/AnalysisResults";
 import RecentCalls from "../components/dashboard/RecentCalls";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voxguardian-production.up.railway.app';
+// In your Dashboard.jsx - HARDCODE the Railway URL for now
+const API_BASE_URL = 'https://voxguardian-production.up.railway.app';
 
 export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -25,7 +26,7 @@ export default function Dashboard() {
 
   const loadRecentCalls = async () => {
     try {
-      console.log("🔍 API_BASE_URL:", API_BASE_URL); // Debug log
+      console.log("🔍 API_BASE_URL:", API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/recent-calls`);
       setRecentCalls(response.data.slice(0, 10));
     } catch (err) {
@@ -46,12 +47,7 @@ export default function Dashboard() {
       const formData = new FormData();
       formData.append("audio", file);
 
-      console.log("🔍 Uploading to:", `${API_BASE_URL}/analyze`); // Debug log
-      console.log("📁 File details:", { 
-        name: file.name, 
-        size: file.size, 
-        type: file.type 
-      });
+      console.log("🔍 Uploading to:", `${API_BASE_URL}/analyze`);
 
       const response = await axios.post(`${API_BASE_URL}/analyze`, formData, {
         headers: {
@@ -60,7 +56,6 @@ export default function Dashboard() {
         timeout: 120000,
       });
 
-      console.log("✅ Analysis result:", response.data);
       setAnalysisResults(response.data);
       loadRecentCalls();
 
