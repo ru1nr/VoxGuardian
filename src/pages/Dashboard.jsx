@@ -10,7 +10,7 @@ import AudioUploader from "../components/dashboard/AudioUploader";
 import AnalysisResults from "../components/dashboard/AnalysisResults";
 import RecentCalls from "../components/dashboard/RecentCalls";
 
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voxguardian-production.up.railway.app';
 
 export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -25,7 +25,8 @@ export default function Dashboard() {
 
   const loadRecentCalls = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/recent-calls`);
+      console.log("🔍 API_BASE_URL:", API_BASE_URL); // Debug log
+      const response = await axios.get(`${API_BASE_URL}/recent-calls`);
       setRecentCalls(response.data.slice(0, 10));
     } catch (err) {
       console.error("Error loading recent calls:", err);
@@ -45,51 +46,27 @@ export default function Dashboard() {
       const formData = new FormData();
       formData.append("audio", file);
 
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+      console.log("🔍 Uploading to:", `${API_BASE_URL}/analyze`); // Debug log
+      console.log("📁 File details:", { 
+        name: file.name, 
+        size: file.size, 
+        type: file.type 
+      });
 
-      // Change from localhost to environment variable
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/analyze`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/analyze`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      });
-      
-      clearInterval(progressInterval);
-      setProgress(100);
-
-      // Use response from backend
-      const result = response.data;
-      const id = Date.now(); // Generate ID once to avoid duplicates
-      const createdDate = new Date().toISOString(); // TODO: Pull from backend response in future
-
-      setAnalysisResults({
-        ...result,
-        id: id,
-        speaker_id: `speaker_${Math.floor(Math.random() * 999) + 1}`,
-        dominant_emotion: "neutral", // placeholder until real analysis
-        created_date: createdDate,
-        audio_file_url: `/audio/${file.name}`,
-        analysis_duration: 2.1, // optional mock metric
+        timeout: 120000,
       });
 
-      setRecentCalls((prev) => [
-        {
-          ...result,
-          id: id,
-          speaker_id: `speaker_${Math.floor(Math.random() * 999) + 1}`,
-          dominant_emotion: "neutral",
-          created_date: createdDate,
-          audio_file_url: `/audio/${file.name}`,
-          analysis_duration: 2.1,
-        },
-        ...prev.slice(0, 9),
-      ]);
+      console.log("✅ Analysis result:", response.data);
+      setAnalysisResults(response.data);
+      loadRecentCalls();
+
     } catch (err) {
+      console.error("❌ Upload error:", err);
       setError("Failed to analyze audio file. Please try again.");
-      console.error("Analysis error:", err);
     } finally {
       setIsAnalyzing(false);
       setProgress(0);
