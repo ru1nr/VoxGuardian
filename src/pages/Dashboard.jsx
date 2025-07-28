@@ -10,8 +10,11 @@ import AudioUploader from "../components/dashboard/AudioUploader";
 import AnalysisResults from "../components/dashboard/AnalysisResults";
 import RecentCalls from "../components/dashboard/RecentCalls";
 
-// Use environment variable instead of hardcoded URL
+// Use environment variable with Railway fallback
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voxguardian-production.up.railway.app';
+
+console.log("🔍 Environment Variable:", import.meta.env.VITE_API_BASE_URL);
+console.log("🔍 Final API_BASE_URL:", API_BASE_URL);
 
 export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -26,7 +29,7 @@ export default function Dashboard() {
 
   const loadRecentCalls = async () => {
     try {
-      console.log("🔍 API_BASE_URL:", API_BASE_URL);
+      console.log("🔍 Loading calls from:", `${API_BASE_URL}/recent-calls`);
       const response = await axios.get(`${API_BASE_URL}/recent-calls`);
       setRecentCalls(response.data.slice(0, 10));
     } catch (err) {
