@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voxguardian-production.up.railway.app';
+
 export default function History() {
   const [calls, setCalls] = useState([]);
   const [filteredCalls, setFilteredCalls] = useState([]);
@@ -30,13 +32,13 @@ export default function History() {
 const loadCalls = async () => {
   try {
     setError(null);
-    const response = await axios.get("http://localhost:5000/recent-calls");
-    console.log("CALLS FETCHED:", response.data); // ✅ TEMP DEBUG
-    setCalls(response.data || []); // Ensure we always have an array
+    const response = await axios.get(`${API_BASE_URL}/recent-calls`);
+    console.log("CALLS FETCHED:", response.data);
+    setCalls(response.data || []);
   } catch (err) {
     console.error("Error loading calls:", err);
     setError("Failed to load call history. Please try again.");
-    setCalls([]); // Set empty array on error
+    setCalls([]);
   } finally {
     setIsLoading(false);
   }
@@ -262,7 +264,7 @@ const loadCalls = async () => {
                               preload="metadata"
                             >
                               <source 
-                                src={`http://localhost:5000${call.audio_file_url}`} 
+                                src={`${API_BASE_URL}${call.audio_file_url}`} 
                                 type="audio/mpeg" 
                               />
                               Your browser does not support the audio element.

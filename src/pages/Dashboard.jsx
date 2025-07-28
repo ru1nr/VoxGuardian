@@ -10,8 +10,8 @@ import AudioUploader from "../components/dashboard/AudioUploader";
 import AnalysisResults from "../components/dashboard/AnalysisResults";
 import RecentCalls from "../components/dashboard/RecentCalls";
 
-// In your Dashboard.jsx - HARDCODE the Railway URL for now
-const API_BASE_URL = 'https://voxguardian-production.up.railway.app';
+// Use environment variable instead of hardcoded URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voxguardian-production.up.railway.app';
 
 export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
